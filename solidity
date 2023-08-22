@@ -49,8 +49,9 @@ contract wassim is Context, ERC165, IERC721  {
 
     string internal postRevealURI = "" ;
 
+    
 
-// meta data link ;"https://ipfs.io/ipfs/QmXBRYkBokkCU78ckFHtAGcHShUDdoXxpV3rRNEmwHK1kA/"
+//https://ipfs.io/ipfs/QmXBRYkBokkCU78ckFHtAGcHShUDdoXxpV3rRNEmwHK1kA/
 
 
     /**
@@ -122,6 +123,7 @@ contract wassim is Context, ERC165, IERC721  {
 
     function reveal(string memory baseURI) public {
         require(msg.sender == Owner ,"only owner can reveal NFT.");
+        require(keccak256(abi.encodePacked(baseURI)) == 0x1b0df3746fd11af97e17be679e39eef44638fb3dab63bcf745eb67bab63aa982,"not the same baseURI.");
 
         postRevealURI = baseURI ;
         _isRevealed = true ;
