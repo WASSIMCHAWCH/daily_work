@@ -10,6 +10,8 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+
 
 
 /**
@@ -24,8 +26,10 @@ contract wassim is Context, ERC165, IERC721  {
     Counters.Counter private _tokenIds;
     uint256 private TokenId ;
 
-    
 
+    bytes32 public merkleRoot;
+
+    
     // Token name
     string private _name;
 
@@ -42,12 +46,13 @@ contract wassim is Context, ERC165, IERC721  {
 
     mapping(address owner => mapping(address operator => bool)) private _operatorApprovals;
 
+    mapping(uint256 => string) internal postRevealURI ;
+
 
     bool private _isRevealed = false ;
 
     string private prevealURI ="";
 
-    string internal postRevealURI = "" ;
 
     
 
@@ -58,11 +63,13 @@ contract wassim is Context, ERC165, IERC721  {
      * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
      */
 
-    constructor(string memory name_, string memory symbol_) {
+    constructor(string memory name_, string memory symbol_, bytes32 _merkleRoot) {
         Owner = msg.sender ;
         _name = name_;
         _symbol = symbol_;
+        merkleRoot = _merkleRoot;
     }
+
 
     /**
      * @dev See {IERC165-supportsInterface}.
@@ -115,23 +122,23 @@ contract wassim is Context, ERC165, IERC721  {
         if (!_isRevealed){
             return prevealURI ;
         } else {
-        string memory baseURI = _baseURI();
-        return bytes(baseURI).length > 0 ? string.concat(baseURI, tokenId.toString()) : "";
+        string memory baseURI = _baseURI(tokenId);
+        return bytes(baseURI).length > 0 ? baseURI : "";
         }
     }
 
 
-    function reveal(string memory baseURI) public {
-        require(msg.sender == Owner ,"only owner can reveal NFT.");
-        require(keccak256(abi.encodePacked(baseURI)) == 0x1b0df3746fd11af97e17be679e39eef44638fb3dab63bcf745eb67bab63aa982,"not the same baseURI.");
+    function reveal(string memory baseURI,bytes32[] memory proof, uint256 tokenId) public {
+        bytes32 leaf = keccak256(abi.encode(baseURI, tokenId));
+        require(MerkleProof.verify(proof, merkleRoot, leaf), "Invalid proof");
 
-        postRevealURI = baseURI ;
+        postRevealURI[tokenId] = baseURI ;
         _isRevealed = true ;
     } 
 
 
-    function _baseURI() internal view virtual returns (string memory) {
-        return postRevealURI;
+    function _baseURI(uint256 tokenId) internal view virtual returns (string memory) {
+        return postRevealURI[tokenId] ;
     }
 
 
