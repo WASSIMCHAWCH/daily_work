@@ -43,16 +43,17 @@ contract wassim is Context, ERC165, IERC721  {
 
     mapping(address owner => mapping(address operator => bool)) private _operatorApprovals;
 
-    mapping(uint256 => bool) private _ownerChanged ;
 
     mapping(uint256 => string) private _tokenURIs;
 
     bool private _isRevealed = false ;
 
-    string private prevealURI ="https://ipfs.io/ipfs/QmQsLZapukdCj32DpDrmAR4qRQLLFgvrApQHrsaNnpZxNj";
+    string private prevealURI ="";
 
     string internal postRevealURI = "" ;
 
+
+//meta data link :"https://ipfs.io/ipfs/QmXBRYkBokkCU78ckFHtAGcHShUDdoXxpV3rRNEmwHK1kA/"
 
 
     /**
@@ -491,7 +492,7 @@ contract wassim is Context, ERC165, IERC721  {
      * @param tokenId uint256 ID of the token to be transferred
      * @param data bytes optional data to send along with the call
      */
-    function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory data ) private {
+    function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory data) private {
         if (to.code.length > 0) {
             try IERC721Receiver(to).onERC721Received(_msgSender(), from, tokenId, data) returns (bytes4 retval) {
                 if (retval != IERC721Receiver.onERC721Received.selector) {
