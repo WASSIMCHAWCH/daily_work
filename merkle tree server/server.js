@@ -7,17 +7,6 @@ const app = express();
 
 app.use(express.json());
 
-/*
-
-const encoded = utils.solidityPack(["string", "uint"], [str, num]);
-
-// hash them with keccak256
-const hashed = utils.keccak256(encoded);
-
-
-
-*/
-
 const data = JSON.parse(fs.readFileSync("uri's.json"));
 console.log(data);
 
