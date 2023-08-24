@@ -27,7 +27,7 @@ app.get("/root", (req, res) => {
 });
 
 app.get("/proof", (req, res) => {
-  const { uri, id } = req.body;
+  const { uri, id } = req.query;
 
   const leaf = ethers.utils.keccak256(
     ethers.utils.defaultAbiCoder.encode(["string", "uint"], [uri, id])
@@ -35,7 +35,7 @@ app.get("/proof", (req, res) => {
 
   const proof = tree.getHexProof(leaf);
 
-  res.send(proof);
+  res.json(proof);
 });
 
 app.listen(3000, () => {
