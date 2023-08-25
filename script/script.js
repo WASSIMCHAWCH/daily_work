@@ -3,7 +3,7 @@ const ethers = require("ethers");
 const abi = require("./ABI.json");
 const uris = require("./uri's.json");
 
-const contractAddress = "0xF4f65813bCb1b1442aba24f6F342672CfaC43a22";
+const contractAddress = "0xFDE795D168AFd30b9B91422C85A62E3d241c9E05";
 
 const provider = new ethers.getDefaultProvider("goerli");
 const signer = new ethers.Wallet(
@@ -35,33 +35,23 @@ async function preveal() {
           id: i,
         },
       })
-      .then((response) => {
+      .then(async (response) => {
         const proofs = response.data;
         console.log("proof:", proofs);
+        console.log(URI);
+        console.log(i);
 
         if (proofs[0].length > 0) {
-          contract
-            .reveal(URI, proofs, i)
-            .then((tx) => {
-              console.log("Transaction hash:", tx.hash);
-              return tx.wait();
-            })
-            .then((receipt) => {
-              console.log("Transaction receipt:", receipt);
-              const events = receipt.events;
-              if (events.length > 0) {
-                console.log("Events:", events);
-              }
-            })
-            .catch((error) => {
-              console.error("Error from smart contract:", error);
-            });
+          await contract.reveal(URI, proofs, i).then((tx) => {
+            console.log("Transaction hash:", tx.hash);
+            return tx.wait();
+          });
         }
       })
       .catch((error) => {
-        console.error("Error from express server:", error);
+        console.error(error);
       });
-    await sleep(20000);
+    await sleep(30000);
   }
 }
 
