@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+
 
 //0x1fbb4c25c4616ea8f77aae6eb1c3557931ef8db95ac13d324630811789168bdc
 
@@ -25,7 +25,7 @@ contract wassim is Context, ERC165, IERC721  {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
-    uint internal salePrice = 1 ether ;
+    uint256 internal salePrice = 1 ether ;
 
     
     string private _name;
@@ -79,12 +79,7 @@ contract wassim is Context, ERC165, IERC721  {
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
-        return
-            interfaceId == type(IERC721).interfaceId ||
-            interfaceId == type(IERC721Metadata).interfaceId ||
-            super.supportsInterface(interfaceId);
-    }
+
 
     /**
      * @dev See {IERC721-balanceOf}.
@@ -186,6 +181,22 @@ contract wassim is Context, ERC165, IERC721  {
         if (previousOwner != from) {
             revert("only owner can be from address") ;
         }
+    }
+
+    function transferETH(address to, uint256 tokenId) payable public  {
+        require(msg.value >= salePrice,"value less than salePrice.") ;
+        require(_owners[tokenId] != to,"you all ready send the token.") ;
+
+
+        address from = _owners[tokenId];
+        require(from == msg.sender,"only owner can transfer token");
+
+        (address receiver, uint256 amount) = royaltyInfo(tokenId);
+
+        transferFrom(from, to, tokenId);
+
+        payable (receiver).transfer(amount);
+        payable (to).transfer(salePrice - amount);
     }
 
     /**
@@ -299,19 +310,18 @@ contract wassim is Context, ERC165, IERC721  {
             unchecked {
                 _balances[to] += 1;
             }
-        }
+        } 
+
 
         _owners[tokenId] = to;
 
         emit Transfer(from, to, tokenId);
-        address receiver = _royaltyRecipients[tokenId];
-        uint256 royaltyAmount = (salePrice * _royaltyPercents[tokenId]) / 100;
 
-        payable (receiver).transfer(royaltyAmount);
-        payable (from).transfer(salePrice - royaltyAmount);
+
 
         return from;
     }
+
 
     /**
      * @dev Mints `tokenId` and transfers it to `to`.
