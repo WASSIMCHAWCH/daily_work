@@ -102,14 +102,14 @@ contract wassimRoyalty is Context, ERC165, IERC721  {
         require(msg.value >= salePrice,"value of ETH < salePrice.");
         (address receiver, uint256 amount) = royaltyInfo(tokenId);
     
-        _transfer(from, to, tokenId);
+        transferFrom(from, to, tokenId);
     
         payable(receiver).transfer(amount);
     
         payable(from).transfer(salePrice - amount);
     }
 
-    /**
+    /**only owner can be from address
      * @dev See {IERC721-balanceOf}.
      */
     function balanceOf(address owner) public view virtual returns (uint256) {
