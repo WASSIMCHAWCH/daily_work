@@ -70,14 +70,14 @@ contract wassimRoyalty is Context, ERC165, IERC721  {
 
     function _setTokenRoyalty(uint256 tokenId, address receiver, uint96 royaltyPercent) internal {
         require(receiver != address(0), "ERC2981: Invalid parameters");
-        require(royaltyPercent > 100, "feeeNumerator can not be < 100");
+        require(royaltyPercent < 100, "royaltyPercent can not be < 100");
 
         _tokenRoyaltyInfo[tokenId] = RoyaltyInfo(receiver, royaltyPercent);
     }
 
 
     function mint(address to, address receiver, uint96 royaltyPercent) public {
-        require(royaltyPercent <= 100, "Royalty percent cannot exceed 100");
+        require(royaltyPercent < 100, "Royalty percent cannot exceed 100");
 
         _tokenIds.increment();
         uint tokenId = _tokenIds.current();
@@ -98,9 +98,8 @@ contract wassimRoyalty is Context, ERC165, IERC721  {
     }
 
 
-    function transferWithRoyalty(address from, address to, uint256 tokenId ) internal  {
-        require(ownerOf(tokenId) == from, "Not the owner");
-    
+    function transferWithRoyalty(address from, address to, uint256 tokenId ) payable public  {
+        require(msg.value >= salePrice,"value of ETH < salePrice.");
         (address receiver, uint256 amount) = royaltyInfo(tokenId);
     
         _transfer(from, to, tokenId);
@@ -173,7 +172,7 @@ contract wassimRoyalty is Context, ERC165, IERC721  {
      * @dev See {IERC721-approve}.
      */
     function approve(address to, uint256 tokenId) public virtual {
-        _approve(to, tokenId, _msgSender());
+        _approve(to, tokenId, msg.sender);
     }
 
     /**
@@ -204,7 +203,7 @@ contract wassimRoyalty is Context, ERC165, IERC721  {
     /**
      * @dev See {IERC721-transferFrom}.
      */
-    function transferFrom(address from, address to, uint256 tokenId) public virtual {
+    function transferFrom(address from, address to, uint256 tokenId) public virtual  {
             require(to != address(0),"reciver address 0.");
         // Setting an "auth" arguments enables the `_isAuthorized` check which verifies that the token exists
         // (from != 0). Therefore, it is not needed to verify that the return value is not 0 here.
@@ -212,12 +211,7 @@ contract wassimRoyalty is Context, ERC165, IERC721  {
         if (previousOwner != from) {
             revert("only owner can be from address") ;
         }
-        // address receiver = _royaltyRecipients[tokenId];
-        //uint256 royaltyAmount = (salePrice * _royaltyPercents[tokenId]) / 100;
 
-       // payable (receiver).transfer(royaltyAmount);
-       // payable (from).transfer(salePrice - royaltyAmount);
-       transferWithRoyalty(from, to, tokenId);
     }
 
     /**
@@ -227,7 +221,7 @@ contract wassimRoyalty is Context, ERC165, IERC721  {
         safeTransferFrom(from, to, tokenId, "");
     }
 
-    /**
+    /**"Not the owner
      * @dev See {IERC721-safeTransferFrom}.
      */
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public virtual {
@@ -306,7 +300,7 @@ contract wassimRoyalty is Context, ERC165, IERC721  {
      * `auth` is either the owner of the token, or approved to operate on the token (by the owner).
      *
      * Emits a {Transfer} event.
-     *
+     *address(form) not the token owner address
      * NOTE: If overriding this function in a way that tracks balances, see also {_increaseBalance}.
      */
     function _update(address to, uint256 tokenId, address auth) internal virtual returns (address) {
@@ -336,12 +330,7 @@ contract wassimRoyalty is Context, ERC165, IERC721  {
         _owners[tokenId] = to;
 
         emit Transfer(from, to, tokenId);
-       // address receiver = _royaltyRecipients[tokenId];
-        //uint256 royaltyAmount = (salePrice * _royaltyPercents[tokenId]) / 100;
-
-       // payable (receiver).transfer(royaltyAmount);
-       // payable (from).transfer(salePrice - royaltyAmount);
-
+        
         return from;
     }
 
@@ -366,8 +355,6 @@ contract wassimRoyalty is Context, ERC165, IERC721  {
             revert("token minted befor.") ;
         }
     }
-
-
 
 
     /**
@@ -429,7 +416,7 @@ contract wassimRoyalty is Context, ERC165, IERC721  {
         address previousOwner = _update(to, tokenId, address(0));
         if (previousOwner == address(0)) {
             revert("address(from) can not be address(0)") ;
-        } else if (previousOwner != from) {
+        } else if (_ownerOf(tokenId) == from) {
             revert ("address(form) not the token owner address");
         }
     }
@@ -450,7 +437,7 @@ contract wassimRoyalty is Context, ERC165, IERC721  {
      * - `to` cannot be the zero address.
      * - `from` cannot be the zero address.
      * - If `to` refers to a smart contract, it must implement {IERC721Receiver-onERC721Received}, which is called upon a safe transfer.
-     *
+     *Not the owner
      * Emits a {Transfer} event.
      */
     function _safeTransfer(address from, address to, uint256 tokenId) internal {
@@ -471,17 +458,13 @@ contract wassimRoyalty is Context, ERC165, IERC721  {
      *
      * The `auth` argument is optional. If the value passed is non 0, then this function will check that `auth` is
      * either the owner of the token, or approved to operate on all tokens held by this owner.
-     *
+     Not the owner
      * Emits an {Approval} event.
      */
     function _approve(address to, uint256 tokenId, address auth) internal virtual returns (address) {
+        require(_owners[tokenId] == auth,"only owner can approve");
+
         address owner = ownerOf(tokenId);
-
-        // We do not use _isAuthorized because single-token approvals should not be able to call approve
-        if (auth != address(0) && owner != auth && !isApprovedForAll(owner, auth)) {
-            revert("auth != address(0)") ;
-        }
-
         _tokenApprovals[tokenId] = to;
         emit Approval(owner, to, tokenId);
 
